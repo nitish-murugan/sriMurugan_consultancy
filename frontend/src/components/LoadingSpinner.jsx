@@ -1,0 +1,21 @@
+import './LoadingSpinner.css';
+
+const LoadingSpinner = ({ fullScreen = false, size = 'medium', text = '' }) => {
+  if (fullScreen) {
+    return (
+      <div className="loading-fullscreen">
+        <div className={`spinner spinner-${size}`}></div>
+        {text && <p className="loading-text">{text}</p>}
+      </div>
+    );
+  }
+
+  return (
+    <div className="loading-container">
+      <div className={`spinner spinner-${size}`}></div>
+      {text && <p className="loading-text">{text}</p>}
+    </div>
+  );
+};
+
+export default LoadingSpinner;
