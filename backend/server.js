@@ -78,6 +78,26 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Server is running', timestamp: new Date() });
 });
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({ 
+    success: true, 
+    message: 'Sri Murugan Tours API', 
+    version: '1.0.0',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth',
+      bookings: '/api/bookings',
+      buses: '/api/buses',
+      cities: '/api/cities',
+      companies: '/api/companies',
+      spots: '/api/spots',
+      payments: '/api/payments',
+      admin: '/api/admin'
+    }
+  });
+});
+
 // Error handling
 app.use(notFound);
 app.use(errorHandler);
