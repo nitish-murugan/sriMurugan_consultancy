@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Bus,
   MapPin,
@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import Button from '../../components/Button';
 import { Card, CardBody } from '../../components/Card';
+import { useAuth } from '../../context/useAuth';
 import './Home.css';
 
 const features = [
@@ -52,6 +53,21 @@ const steps = [
 ];
 
 export default function Home() {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+
+  const handleStartBooking = () => {
+    if (isAuthenticated) {
+      navigate('/booking');
+      return;
+    }
+
+    const goToLogin = window.confirm(
+      'Please login or sign up to start booking.\n\nPress OK for Login or Cancel for Sign Up.'
+    );
+    navigate(goToLogin ? '/login' : '/register');
+  };
+
   return (
     <div className="home">
       {/* Hero Section */}
@@ -67,11 +83,9 @@ export default function Home() {
             and memorable experiences.
           </p>
           <div className="hero-actions">
-            <Link to="/booking">
-              <Button size="large" icon={ArrowRight}>
-                Start Booking
-              </Button>
-            </Link>
+            <Button size="large" icon={ArrowRight} onClick={handleStartBooking}>
+              Start Booking
+            </Button>
             <Link to="/register">
               <Button variant="outline" size="large">
                 Create Account
