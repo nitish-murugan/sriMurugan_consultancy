@@ -62,10 +62,7 @@ export default function Home() {
       return;
     }
 
-    const goToLogin = window.confirm(
-      'Please login or sign up to start booking.\n\nPress OK for Login or Cancel for Sign Up.'
-    );
-    navigate(goToLogin ? '/login' : '/register');
+    navigate('/login');
   };
 
   return (
