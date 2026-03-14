@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { Search, Eye, Download, Filter, Check, X } from 'lucide-react';
 import { Card, CardBody, CardHeader } from '../../../components/Card';
 import Button from '../../../components/Button';
@@ -11,6 +12,7 @@ import '../dashboard/AdminDashboard.css';
 
 export default function AdminBookings() {
   const [bookings, setBookings] = useState([]);
+  const [driversList, setDriversList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -23,12 +25,24 @@ export default function AdminBookings() {
     phone: '',
     licenseNumber: ''
   });
+  const [permitFile, setPermitFile] = useState(null);
   const [declineReason, setDeclineReason] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     fetchBookings();
+    fetchDrivers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter]);
+
+  const fetchDrivers = async () => {
+    try {
+      const { data } = await api.get('/drivers');
+      setDriversList(data.data?.drivers || []);
+    } catch (error) {
+      console.error('Error fetching drivers', error);
+    }
+  };
 
   const fetchBookings = async () => {
     try {
@@ -44,17 +58,36 @@ export default function AdminBookings() {
   };
 
   const updateStatus = async (bookingId, status, additionalData = {}) => {
+    setActionLoading(true);
+    let toastId = toast.loading(`${status === 'accepted' ? 'Accepting' : 'Declining'} booking...`);
     try {
       await api.put(`/bookings/${bookingId}/status`, { status, ...additionalData });
+      
+      // Upload permit file if it exists and status is accepted
+      if (status === 'accepted' && permitFile) {
+        toast.loading('Uploading vehicle permit...', { id: toastId });
+        const formData = new FormData();
+        formData.append('permitFile', permitFile);
+        await api.put(`/bookings/${bookingId}/permit`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+      }
+      
+      toast.success(`Booking ${status} successfully!`, { id: toastId });
       fetchBookings();
       setShowAcceptModal(false);
       setShowDeclineModal(false);
       setSelectedBooking(null);
       setDriverDetails({ name: '', phone: '', licenseNumber: '' });
+      setPermitFile(null);
       setDeclineReason('');
     } catch (error) {
       console.error('Error updating status:', error);
-      alert(error.response?.data?.message || 'Failed to update booking status');
+      toast.error(error.response?.data?.message || 'Failed to update booking status', { id: toastId });
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -70,7 +103,7 @@ export default function AdminBookings() {
 
   const submitAccept = () => {
     if (!driverDetails.name || !driverDetails.phone || !driverDetails.licenseNumber) {
-      alert('Please fill in all driver details');
+      toast.error('Please fill in all driver details');
       return;
     }
     updateStatus(selectedBooking._id, 'accepted', { driverDetails });
@@ -78,7 +111,7 @@ export default function AdminBookings() {
 
   const submitDecline = () => {
     if (!declineReason.trim()) {
-      alert('Please provide a reason for declining');
+      toast.error('Please provide a reason for declining');
       return;
     }
     updateStatus(selectedBooking._id, 'declined', { declineReason });
@@ -268,6 +301,7 @@ export default function AdminBookings() {
           setShowAcceptModal(false);
           setSelectedBooking(null);
           setDriverDetails({ name: '', phone: '', licenseNumber: '' });
+          setPermitFile(null);
         }}
         title="Accept Booking - Driver Details"
       >
@@ -275,6 +309,33 @@ export default function AdminBookings() {
           <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
             Please provide driver details to accept this booking
           </p>
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 500 }}>
+              Select Existing Driver
+            </label>
+            <Select
+              onChange={(e) => {
+                const selected = driversList.find(d => d._id === e.target.value);
+                if (selected) {
+                  setDriverDetails({
+                    name: selected.name,
+                    phone: selected.phone,
+                    licenseNumber: selected.licenseNumber
+                  });
+                } else {
+                  setDriverDetails({ name: '', phone: '', licenseNumber: '' });
+                }
+              }}
+              style={{ width: '100%', marginBottom: '1rem' }}
+            >
+              <option value="">-- Select Driver --</option>
+              {driversList.map(driver => (
+                <option key={driver._id} value={driver._id}>
+                  {driver.name} - {driver.phone}
+                </option>
+              ))}
+            </Select>
+          </div>
           <div>
             <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 500 }}>
               Driver Name <span style={{ color: 'var(--error)' }}>*</span>
@@ -329,6 +390,23 @@ export default function AdminBookings() {
               }}
             />
           </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 500 }}>
+              Upload Vehicle Permit Image/PDF
+            </label>
+            <input
+              type="file"
+              accept="image/*,.pdf"
+              onChange={(e) => setPermitFile(e.target.files[0])}
+              style={{
+                width: '100%',
+                padding: '0.625rem',
+                border: '1px solid var(--border-color)',
+                borderRadius: '6px',
+                fontSize: '0.9rem',
+              }}
+            />
+          </div>
           <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
             <Button
               variant="outline"
@@ -336,12 +414,14 @@ export default function AdminBookings() {
                 setShowAcceptModal(false);
                 setSelectedBooking(null);
                 setDriverDetails({ name: '', phone: '', licenseNumber: '' });
+                setPermitFile(null);
               }}
+              disabled={actionLoading}
             >
               Cancel
             </Button>
-            <Button onClick={submitAccept}>
-              Accept Booking
+            <Button onClick={submitAccept} disabled={actionLoading}>
+              {actionLoading ? <LoadingSpinner size={16} /> : 'Accept Booking'}
             </Button>
           </div>
         </div>
@@ -389,11 +469,12 @@ export default function AdminBookings() {
                 setSelectedBooking(null);
                 setDeclineReason('');
               }}
+              disabled={actionLoading}
             >
               Cancel
             </Button>
-            <Button variant="danger" onClick={submitDecline}>
-              Decline Booking
+            <Button variant="danger" onClick={submitDecline} disabled={actionLoading}>
+              {actionLoading ? <LoadingSpinner size={16} /> : 'Decline Booking'}
             </Button>
           </div>
         </div>

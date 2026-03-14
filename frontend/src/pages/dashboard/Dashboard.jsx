@@ -434,6 +434,19 @@ export default function Dashboard() {
                       <div>
                         <strong>License Number:</strong> {selectedBooking.driverDetails.licenseNumber}
                       </div>
+                      {selectedBooking.driverDetails.permitFilePath && (
+                        <div>
+                          <strong>Vehicle Permit:</strong>{' '}
+                          <a
+                            href={`${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '')}${selectedBooking.driverDetails.permitFilePath}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: 'var(--primary)', textDecoration: 'underline' }}
+                          >
+                            View Document
+                          </a>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

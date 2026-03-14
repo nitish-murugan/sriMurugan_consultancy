@@ -1,11 +1,11 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { 
-  Bus, 
-  LogOut, 
-  User, 
-  LayoutDashboard, 
-  Menu, 
+import {
+  Bus,
+  LogOut,
+  User,
+  LayoutDashboard,
+  Menu,
   X,
   CalendarPlus
 } from 'lucide-react';
@@ -35,7 +35,7 @@ const Navbar = () => {
           <span>Sri Murugan Tours</span>
         </Link>
 
-        <button 
+        <button
           className="mobile-menu-btn"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
@@ -44,8 +44,8 @@ const Navbar = () => {
 
         <div className={`navbar-menu ${mobileMenuOpen ? 'open' : ''}`}>
           <div className="navbar-links">
-            <Link 
-              to="/" 
+            <Link
+              to="/"
               className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}
               onClick={closeMobileMenu}
             >
@@ -53,16 +53,16 @@ const Navbar = () => {
             </Link>
             {isAuthenticated && !isAdmin && (
               <>
-                <Link 
-                  to="/book" 
-                  className={`nav-link ${location.pathname.startsWith('/book') ? 'active' : ''}`}
+                <Link
+                  to="/booking"
+                  className={`nav-link ${location.pathname.startsWith('/booking') ? 'active' : ''}`}
                   onClick={closeMobileMenu}
                 >
                   <CalendarPlus size={18} />
                   Book Trip
                 </Link>
-                <Link 
-                  to="/dashboard" 
+                <Link
+                  to="/dashboard"
                   className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`}
                   onClick={closeMobileMenu}
                 >
@@ -72,8 +72,8 @@ const Navbar = () => {
               </>
             )}
             {isAdmin && (
-              <Link 
-                to="/admin" 
+              <Link
+                to="/admin"
                 className={`nav-link ${location.pathname.startsWith('/admin') ? 'active' : ''}`}
                 onClick={closeMobileMenu}
               >
@@ -97,15 +97,15 @@ const Navbar = () => {
               </div>
             ) : (
               <div className="auth-buttons">
-                <Link 
-                  to="/login" 
+                <Link
+                  to="/login"
                   className="nav-link"
                   onClick={closeMobileMenu}
                 >
                   Login
                 </Link>
-                <Link 
-                  to="/register" 
+                <Link
+                  to="/register"
                   className="btn-register"
                   onClick={closeMobileMenu}
                 >

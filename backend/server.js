@@ -19,6 +19,7 @@ import companyRoutes from './routes/companies.js';
 import spotRoutes from './routes/spots.js';
 import paymentRoutes from './routes/payments.js';
 import adminRoutes from './routes/admin.js';
+import driverRoutes from './routes/drivers.js';
 
 // Load env vars
 dotenv.config();
@@ -76,6 +77,7 @@ app.use('/api/companies', companyRoutes);
 app.use('/api/spots', spotRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/drivers', driverRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -97,7 +99,8 @@ app.get('/', (req, res) => {
       companies: '/api/companies',
       spots: '/api/spots',
       payments: '/api/payments',
-      admin: '/api/admin'
+      admin: '/api/admin',
+      drivers: '/api/drivers'
     }
   });
 });

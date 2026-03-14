@@ -18,6 +18,7 @@ import {
   AdminCompanies,
   AdminSpots,
   AdminCities,
+  AdminDrivers,
 } from './pages/admin';
 
 function App() {
@@ -90,6 +91,7 @@ function App() {
               <Route path="companies" element={<AdminCompanies />} />
               <Route path="spots" element={<AdminSpots />} />
               <Route path="cities" element={<AdminCities />} />
+              <Route path="drivers" element={<AdminDrivers />} />
             </Route>
           </Routes>
         </BookingProvider>
