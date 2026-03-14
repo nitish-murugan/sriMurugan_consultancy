@@ -101,24 +101,31 @@ export const createBooking = async (req, res) => {
     // Don't update bus status yet - wait for admin approval
     // Bus will be marked as in-use when admin accepts the booking
 
-    // Generate invoice
-    const user = await User.findById(req.user._id);
-    const invoiceResult = await generateInvoice(booking, user);
-    
-    if (invoiceResult.success) {
-      booking.invoicePath = invoiceResult.filePath;
-      await booking.save();
-    }
-
-    // Send confirmation email
-    await sendBookingConfirmationEmail(user.email, user.name, booking);
-
     // Populate bus details for response
     const populatedBooking = await Booking.findById(booking._id)
       .populate('transport.bus', 'busNumber type capacity')
       .populate('user', 'name email phone');
 
+    // Send response immediately
     sendCreated(res, 'Booking created successfully', populatedBooking);
+
+    // Generate invoice and send email in the background (non-blocking)
+    try {
+      const user = await User.findById(req.user._id);
+      const invoiceResult = await generateInvoice(booking, user);
+      
+      if (invoiceResult.success) {
+        booking.invoicePath = invoiceResult.filePath;
+        await booking.save();
+      }
+
+      // Send confirmation email (non-blocking)
+      sendBookingConfirmationEmail(user.email, user.name, booking).catch(err => {
+        console.error('Failed to send booking confirmation email:', err.message);
+      });
+    } catch (bgError) {
+      console.error('Background task error (invoice/email):', bgError.message);
+    }
   } catch (error) {
     console.error('Create booking error:', error);
     sendError(res, error.message, 500);

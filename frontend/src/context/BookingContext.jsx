@@ -45,9 +45,6 @@ const initialBookingState = {
   // Step 8: Payment
   payment: {
     amount: 0,
-    razorpayOrderId: '',
-    razorpayPaymentId: '',
-    razorpaySignature: '',
     status: 'pending'
   }
 };

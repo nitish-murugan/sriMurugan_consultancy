@@ -87,9 +87,26 @@ export default function Step9Payment() {
             <p style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
               Your booking request has been received and is pending admin approval.
             </p>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-              Booking ID: <strong>{bookingId}</strong>
-            </p>
+            
+            <div style={{ 
+              background: 'var(--primary-light)', 
+              border: '2px dashed var(--primary)', 
+              borderRadius: '8px', 
+              padding: '1.5rem', 
+              margin: '2rem auto',
+              maxWidth: '400px'
+            }}>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+                Acknowledgement Number:
+              </p>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 1rem 0', color: 'var(--primary)', letterSpacing: '1px' }}>
+                {bookingId}
+              </h3>
+              <p style={{ fontSize: '0.9rem', color: 'var(--warning)', fontWeight: 600, margin: 0 }}>
+                📸 Please take a screenshot of this acknowledgement number for future reference.
+              </p>
+            </div>
+
             <div style={{ 
               background: 'rgba(102, 126, 234, 0.1)', 
               border: '1px solid var(--primary)',
@@ -105,8 +122,8 @@ export default function Step9Payment() {
               <ul style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', margin: 0, paddingLeft: '1.25rem' }}>
                 <li>Our admin team will review your booking request</li>
                 <li>You will receive a confirmation email once approved</li>
-                <li>Invoice has been generated and can be downloaded from your dashboard</li>
-                <li>Payment has been confirmed as completed</li>
+                <li>Invoice will be generated and can be downloaded from your dashboard</li>
+                <li>Payment details will be shared after approval</li>
               </ul>
             </div>
             <Button onClick={handleViewBooking}>
@@ -189,7 +206,7 @@ export default function Step9Payment() {
           </div>
           <ul style={{ margin: 0, paddingLeft: '1.25rem', color: 'var(--text-secondary)' }}>
             <li>Your booking will be pending until admin approval</li>
-            <li>Payment confirmation will be processed upon submission</li>
+            <li>Payment details will be shared after admin approval</li>
             <li>Travel dates are subject to bus availability</li>
             <li>Cancellation policy applies as per terms</li>
           </ul>
@@ -201,7 +218,7 @@ export default function Step9Payment() {
           </Button>
           <div className="step-actions-right">
             <Button onClick={handleSubmitBooking} loading={loading}>
-              Confirm & Pay Now
+              Submit Booking
             </Button>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Users, Wifi, Snowflake, Tv, Music, Check, IndianRupee } from 'lucide-react';
+import { Search, Users, Wifi, Snowflake, Tv, Music, Check, IndianRupee, Image } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useBooking } from '../../../context/BookingContext';
@@ -8,6 +8,8 @@ import Button from '../../../components/Button';
 import LoadingSpinner from '../../../components/LoadingSpinner';
 import EmptyState from '../../../components/EmptyState';
 import api from '../../../services/api';
+
+const BACKEND_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
 
 const amenityIcons = {
   'ac': <Snowflake size={12} />,
@@ -167,6 +169,45 @@ export default function Step2Bus() {
                     <IndianRupee size={18} style={{ display: 'inline' }} />
                     {bus.pricePerDay?.toLocaleString()}/day
                   </div>
+                  {bus.imagePath ? (
+                    <a
+                      href={`${BACKEND_URL}${bus.imagePath}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                        marginTop: '0.5rem',
+                        fontSize: '0.875rem',
+                        color: 'var(--primary)',
+                        fontWeight: 500,
+                        textDecoration: 'none',
+                        transition: 'opacity 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
+                      onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                    >
+                      <Image size={14} />
+                      View bus image
+                    </a>
+                  ) : (
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                        marginTop: '0.5rem',
+                        fontSize: '0.875rem',
+                        color: 'var(--text-muted)',
+                        fontWeight: 500
+                      }}
+                    >
+                      <Image size={14} />
+                      No image available
+                    </span>
+                  )}
                 </div>
               </div>
             ))}

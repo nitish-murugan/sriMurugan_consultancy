@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, MapPin, Check, Camera, Clock } from 'lucide-react';
+import { Search, MapPin, Check, Camera, Clock, Sparkles } from 'lucide-react';
 import { useBooking } from '../../../context/BookingContext';
 import { Card, CardBody } from '../../../components/Card';
 import Button from '../../../components/Button';
@@ -33,9 +33,10 @@ export default function Step6Spots() {
   }, [searchTerm, spots]);
 
   const fetchSpots = async () => {
+    setLoading(true);
     try {
-      const { data } = await api.get('/spots', {
-        params: { city: bookingData.city?._id },
+      const { data } = await api.post('/spots/search', {
+        city: bookingData.city?.name || 'Chennai'
       });
       setSpots(data.data?.spots || []);
       setFilteredSpots(data.data?.spots || []);
@@ -47,9 +48,10 @@ export default function Step6Spots() {
   };
 
   const handleSpotToggle = (spot) => {
-    const isSelected = selectedSpots.find((s) => s._id === spot._id);
+    const spotId = spot.id || spot._id;
+    const isSelected = selectedSpots.find((s) => (s.id || s._id) === spotId);
     if (isSelected) {
-      setSelectedSpots(selectedSpots.filter((s) => s._id !== spot._id));
+      setSelectedSpots(selectedSpots.filter((s) => (s.id || s._id) !== spotId));
     } else {
       setSelectedSpots([...selectedSpots, spot]);
     }
@@ -61,7 +63,18 @@ export default function Step6Spots() {
   };
 
   if (loading) {
-    return <LoadingSpinner />;
+    return (
+      <Card className="step-card">
+        <CardBody style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+          <Sparkles size={40} color="var(--primary)" style={{ marginBottom: '1.5rem' }} />
+          <h3>Finding the best visiting spots...</h3>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
+            Using AI to find the most popular and educational places to visit in {bookingData.city?.name}
+          </p>
+          <LoadingSpinner />
+        </CardBody>
+      </Card>
+    );
   }
 
   return (
@@ -99,10 +112,11 @@ export default function Step6Spots() {
         ) : (
           <div className="multi-select-list">
             {filteredSpots.map((spot) => {
-              const isSelected = selectedSpots.find((s) => s._id === spot._id);
+              const spotId = spot.id || spot._id;
+              const isSelected = selectedSpots.find((s) => (s.id || s._id) === spotId);
               return (
                 <div
-                  key={spot._id}
+                  key={spotId}
                   className={`multi-select-item ${isSelected ? 'selected' : ''}`}
                   onClick={() => handleSpotToggle(spot)}
                 >

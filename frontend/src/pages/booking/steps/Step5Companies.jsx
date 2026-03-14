@@ -13,13 +13,10 @@ export default function Step5Companies() {
   const [filteredCompanies, setFilteredCompanies] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiSuggestion, setAiSuggestion] = useState('');
   const [selectedCompanies, setSelectedCompanies] = useState(bookingData.companies || []);
 
   useEffect(() => {
     fetchCompanies();
-    fetchAISuggestions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -36,9 +33,11 @@ export default function Step5Companies() {
   }, [searchTerm, companies]);
 
   const fetchCompanies = async () => {
+    setLoading(true);
     try {
-      const { data } = await api.get('/companies', {
-        params: { city: bookingData.city?._id },
+      const { data } = await api.post('/companies/search', {
+        domain: bookingData.institution?.department || bookingData.institution?.type || 'Technology',
+        city: bookingData.city?.name || 'Chennai'
       });
       setCompanies(data.data?.companies || []);
       setFilteredCompanies(data.data?.companies || []);
@@ -49,28 +48,11 @@ export default function Step5Companies() {
     }
   };
 
-  const fetchAISuggestions = async () => {
-    if (!bookingData.city || !bookingData.institution?.type) return;
-
-    setAiLoading(true);
-    try {
-      const { data } = await api.post('/companies/ai-suggest', {
-        city: bookingData.city.name,
-        institutionType: bookingData.institution.type,
-        department: bookingData.institution.department,
-      });
-      setAiSuggestion(data.data?.suggestion || '');
-    } catch (error) {
-      console.error('Error fetching AI suggestions:', error);
-    } finally {
-      setAiLoading(false);
-    }
-  };
-
   const handleCompanyToggle = (company) => {
-    const isSelected = selectedCompanies.find((c) => c._id === company._id);
+    const compId = company.id || company._id;
+    const isSelected = selectedCompanies.find((c) => (c.id || c._id) === compId);
     if (isSelected) {
-      setSelectedCompanies(selectedCompanies.filter((c) => c._id !== company._id));
+      setSelectedCompanies(selectedCompanies.filter((c) => (c.id || c._id) !== compId));
     } else {
       setSelectedCompanies([...selectedCompanies, company]);
     }
@@ -82,7 +64,18 @@ export default function Step5Companies() {
   };
 
   if (loading) {
-    return <LoadingSpinner />;
+    return (
+      <Card className="step-card">
+        <CardBody style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+          <Sparkles size={40} color="var(--primary)" style={{ marginBottom: '1.5rem' }} />
+          <h3>Finding the best companies for you...</h3>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
+            Using AI to fetch real {bookingData.institution?.department || 'companies'} in {bookingData.city?.name}
+          </p>
+          <LoadingSpinner />
+        </CardBody>
+      </Card>
+    );
   }
 
   return (
@@ -92,18 +85,6 @@ export default function Step5Companies() {
         <p className="step-description">
           Choose the companies/industries you want to visit in {bookingData.city?.name}
         </p>
-
-        {aiSuggestion && (
-          <div className="ai-suggestion-box">
-            <div className="ai-suggestion-header">
-              <Sparkles size={20} color="var(--primary)" />
-              <span>AI Recommendations</span>
-            </div>
-            <div className="ai-suggestion-content">
-              {aiLoading ? 'Getting personalized suggestions...' : aiSuggestion}
-            </div>
-          </div>
-        )}
 
         <div className="search-box">
           <Search className="search-icon" size={20} />
@@ -132,10 +113,11 @@ export default function Step5Companies() {
         ) : (
           <div className="multi-select-list">
             {filteredCompanies.map((company) => {
-              const isSelected = selectedCompanies.find((c) => c._id === company._id);
+              const compId = company.id || company._id;
+              const isSelected = selectedCompanies.find((c) => (c.id || c._id) === compId);
               return (
                 <div
-                  key={company._id}
+                  key={compId}
                   className={`multi-select-item ${isSelected ? 'selected' : ''}`}
                   onClick={() => handleCompanyToggle(company)}
                 >
