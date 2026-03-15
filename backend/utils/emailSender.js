@@ -170,7 +170,7 @@ export const sendEmail = async ({ to, subject, html, text }) => {
 
     const targets = getTransportTargets();
     const fromAddress = process.env.SMTP_FROM || process.env.SMTP_USER;
-    
+
     const mailOptions = {
       from: `"Sri Murugan Tours" <${fromAddress}>`,
       to,
@@ -237,7 +237,7 @@ export const sendEmail = async ({ to, subject, html, text }) => {
 // Password Reset Email
 export const sendPasswordResetEmail = async (email, resetToken, name) => {
   const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
-  
+
   const html = `
     <!DOCTYPE html>
     <html>
@@ -286,7 +286,7 @@ export const sendPasswordResetEmail = async (email, resetToken, name) => {
 // Booking Status Email
 export const sendBookingStatusEmail = async (email, name, booking, status, driverDetails = null) => {
   let statusMessage, statusColor;
-  
+
   switch (status) {
     case 'accepted':
       statusMessage = 'Your booking has been accepted!';
