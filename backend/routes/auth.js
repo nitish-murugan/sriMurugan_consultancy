@@ -5,6 +5,7 @@ import {
   login,
   logout,
   refreshToken,
+  sendTestEmail,
   getMe,
   forgotPassword,
   resetPassword,
@@ -32,6 +33,8 @@ const loginValidation = [
 router.post('/register', registerValidation, register);
 router.post('/login', loginValidation, login);
 router.post('/refresh-token', refreshToken);
+// Keep this above `router.use(protect)` so the endpoint remains public.
+router.route('/test-email').get(sendTestEmail).post(sendTestEmail);
 router.post('/forgot-password', body('email').isEmail(), forgotPassword);
 router.post('/reset-password/:token', body('password').isLength({ min: 6 }), resetPassword);
 

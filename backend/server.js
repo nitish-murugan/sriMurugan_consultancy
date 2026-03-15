@@ -84,6 +84,11 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Server is running', timestamp: new Date() });
 });
 
+// Avoid noisy 404 logs from browser default favicon requests.
+app.get('/favicon.ico', (_req, res) => {
+  res.status(204).end();
+});
+
 // Root route
 app.get('/', (req, res) => {
   res.json({ 
@@ -93,6 +98,7 @@ app.get('/', (req, res) => {
     endpoints: {
       health: '/api/health',
       auth: '/api/auth',
+      testEmail: '/api/auth/test-email',
       bookings: '/api/bookings',
       buses: '/api/buses',
       cities: '/api/cities',

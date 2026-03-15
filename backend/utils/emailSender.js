@@ -13,15 +13,18 @@ if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) 
 }
 
 // Create transporter
-const createTransporter = () => {
+const createTransporter = ({ host, port }) => {
   const smtpHost = process.env.SMTP_HOST;
-  const smtpPort = Number(process.env.SMTP_PORT || 587);
+  const smtpPort = Number(port || process.env.SMTP_PORT || 587);
   const smtpUser = process.env.SMTP_USER;
   const smtpPass = process.env.SMTP_PASS;
+  const smtpSecureRaw = typeof process.env.SMTP_SECURE === 'string'
+    ? process.env.SMTP_SECURE.toLowerCase().trim()
+    : undefined;
   const smtpSecure =
-    typeof process.env.SMTP_SECURE === 'string'
-      ? process.env.SMTP_SECURE.toLowerCase() === 'true'
-      : smtpPort === 465;
+    !smtpSecureRaw || smtpSecureRaw === 'auto'
+      ? smtpPort === 465
+      : smtpSecureRaw === 'true';
   const smtpRequireTLS =
     typeof process.env.SMTP_REQUIRE_TLS === 'string' &&
     process.env.SMTP_REQUIRE_TLS.toLowerCase() === 'true';
@@ -37,12 +40,12 @@ const createTransporter = () => {
 
   if (!smtpHost || !smtpUser || !smtpPass) {
     throw new Error(
-      'Missing SMTP configuration. Set SMTP_HOST, SMTP_PORT, SMTP_USER, and SMTP_PASS in backend/.env'
+      'Missing SMTP configuration. Set SMTP_HOST, SMTP_PORT, SMTP_USER, and SMTP_PASS in environment variables'
     );
   }
 
   return nodemailer.createTransport({
-    host: smtpHost,
+    host: host || smtpHost,
     port: smtpPort,
     secure: smtpSecure,
     requireTLS: smtpRequireTLS,
@@ -59,10 +62,34 @@ const createTransporter = () => {
   });
 };
 
+const getTransportTargets = () => {
+  const smtpHost = process.env.SMTP_HOST;
+  const primaryPort = Number(process.env.SMTP_PORT || 587);
+  const fallbackPorts = (process.env.SMTP_FALLBACK_PORTS || '465')
+    .split(',')
+    .map((value) => Number(value.trim()))
+    .filter((value) => Number.isInteger(value) && value > 0);
+
+  const allPorts = [primaryPort, ...fallbackPorts].filter(
+    (port, index, arr) => Number.isInteger(port) && arr.indexOf(port) === index
+  );
+
+  return allPorts.map((port) => ({ host: smtpHost, port }));
+};
+
+const RETRYABLE_SMTP_CODES = new Set([
+  'ETIMEDOUT',
+  'ECONNECTION',
+  'ESOCKET',
+  'ECONNRESET',
+  'EHOSTUNREACH',
+  'ENOTFOUND'
+]);
+
 // Send email helper
 export const sendEmail = async ({ to, subject, html, text }) => {
   try {
-    const transporter = createTransporter();
+    const targets = getTransportTargets();
     const fromAddress = process.env.SMTP_FROM || process.env.SMTP_USER;
     
     const mailOptions = {
@@ -73,9 +100,38 @@ export const sendEmail = async ({ to, subject, html, text }) => {
       text
     };
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Email sent:', info.messageId);
-    return { success: true, messageId: info.messageId };
+    let lastError;
+
+    for (const target of targets) {
+      try {
+        const transporter = createTransporter(target);
+        const info = await transporter.sendMail(mailOptions);
+        console.log(`Email sent via ${target.host}:${target.port}:`, info.messageId);
+        return {
+          success: true,
+          messageId: info.messageId,
+          host: target.host,
+          port: target.port
+        };
+      } catch (error) {
+        lastError = error;
+        const shouldRetry = RETRYABLE_SMTP_CODES.has(error.code);
+
+        if (!shouldRetry) {
+          break;
+        }
+
+        console.warn(`SMTP attempt failed on ${target.host}:${target.port} with ${error.code}, trying next target`);
+      }
+    }
+
+    console.error('Email error:', {
+      message: lastError?.message,
+      code: lastError?.code,
+      command: lastError?.command,
+      attemptedTargets: targets.map((target) => `${target.host}:${target.port}`).join(', ')
+    });
+    return { success: false, error: lastError?.message || 'SMTP send failed', code: lastError?.code };
   } catch (error) {
     console.error('Email error:', {
       message: error.message,

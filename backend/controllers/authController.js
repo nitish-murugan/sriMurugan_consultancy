@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import User from '../models/User.js';
 import { sendSuccess, sendError, sendCreated, sendUnauthorized } from '../utils/responseHelper.js';
-import { sendPasswordResetEmail } from '../utils/emailSender.js';
+import { sendEmail, sendPasswordResetEmail } from '../utils/emailSender.js';
 
 // Generate Access Token
 const generateAccessToken = (id) => {
@@ -16,6 +16,50 @@ const generateRefreshToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_REFRESH_SECRET, {
     expiresIn: process.env.JWT_REFRESH_EXPIRE || '7d'
   });
+};
+
+// @desc    Send a fixed test email
+// @route   GET /api/auth/test-email
+// @access  Public (optionally protected via TEST_EMAIL_API_KEY)
+export const sendTestEmail = async (req, res) => {
+  try {
+    const endpointKey = process.env.TEST_EMAIL_API_KEY;
+    const providedKey = req.query.key || req.headers['x-test-email-key'];
+
+    if (endpointKey && providedKey !== endpointKey) {
+      return sendUnauthorized(res, 'Invalid key for test email endpoint');
+    }
+
+    const recipient = 'nitishm.23it@kongu.edu';
+    const sentAt = new Date();
+
+    const result = await sendEmail({
+      to: recipient,
+      subject: 'Sri Murugan Tours - Test Email',
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #222;">
+          <h2>Sri Murugan Tours - Test Email</h2>
+          <p>This is a test email triggered from the backend endpoint.</p>
+          <p><strong>Sent At:</strong> ${sentAt.toISOString()}</p>
+          <p><strong>Environment:</strong> ${process.env.NODE_ENV || 'development'}</p>
+        </div>
+      `,
+      text: `Sri Murugan Tours test email. Sent at ${sentAt.toISOString()} in ${process.env.NODE_ENV || 'development'} environment.`
+    });
+
+    if (!result.success) {
+      return sendError(res, `Failed to send test email: ${result.error}`, 500);
+    }
+
+    return sendSuccess(res, 'Test email sent successfully', {
+      to: recipient,
+      messageId: result.messageId,
+      sentAt: sentAt.toISOString()
+    });
+  } catch (error) {
+    console.error('Send test email error:', error);
+    return sendError(res, error.message, 500);
+  }
 };
 
 // @desc    Register new user

@@ -322,16 +322,24 @@ export const updateBookingStatus = async (req, res) => {
       }
     }
 
-    // Send email notification
-    await sendBookingStatusEmail(
+    sendSuccess(res, `Booking ${status} successfully`, booking);
+
+    // Send email in the background so SMTP delays do not block API response.
+    sendBookingStatusEmail(
       booking.user.email,
       booking.user.name,
       booking,
       status,
       status === 'accepted' ? driverDetails : null
-    );
-
-    sendSuccess(res, `Booking ${status} successfully`, booking);
+    )
+      .then(result => {
+        if (!result?.success) {
+          console.error('Booking status email failed:', result?.error || 'Unknown email error');
+        }
+      })
+      .catch(err => {
+        console.error('Booking status email exception:', err.message);
+      });
   } catch (error) {
     console.error('Update booking status error:', error);
     sendError(res, error.message, 500);
