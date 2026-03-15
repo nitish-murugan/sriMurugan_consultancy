@@ -1,6 +1,6 @@
-import { 
-  MapPin, Bus, Building, Users, Building2, Camera, Utensils, 
-  Calendar, Phone, Mail, IndianRupee, Edit2 
+import {
+  MapPin, Bus, Building, Users, Building2, Camera, Utensils,
+  Calendar, Phone, Mail, IndianRupee, Edit2
 } from 'lucide-react';
 import { useBooking } from '../../../context/BookingContext';
 import { Card, CardBody } from '../../../components/Card';
@@ -48,8 +48,8 @@ export default function Step8Review() {
           <div className="review-section-title">
             <MapPin size={20} color="var(--primary)" />
             Trip Details
-            <button 
-              onClick={() => setStep(1)} 
+            <button
+              onClick={() => setStep(1)}
               style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)' }}
             >
               <Edit2 size={16} />
@@ -78,8 +78,8 @@ export default function Step8Review() {
           <div className="review-section-title">
             <Bus size={20} color="var(--primary)" />
             Bus Details
-            <button 
-              onClick={() => setStep(2)} 
+            <button
+              onClick={() => setStep(2)}
               style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)' }}
             >
               <Edit2 size={16} />
@@ -110,8 +110,8 @@ export default function Step8Review() {
           <div className="review-section-title">
             <Building size={20} color="var(--primary)" />
             Institution Details
-            <button 
-              onClick={() => setStep(3)} 
+            <button
+              onClick={() => setStep(3)}
               style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)' }}
             >
               <Edit2 size={16} />
@@ -156,8 +156,8 @@ export default function Step8Review() {
           <div className="review-section-title">
             <Users size={20} color="var(--primary)" />
             Participants
-            <button 
-              onClick={() => setStep(4)} 
+            <button
+              onClick={() => setStep(4)}
               style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)' }}
             >
               <Edit2 size={16} />

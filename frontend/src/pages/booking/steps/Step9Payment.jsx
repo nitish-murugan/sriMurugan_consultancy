@@ -35,7 +35,7 @@ export default function Step9Payment() {
 
     try {
       console.log('Booking Data:', bookingData);
-      
+
       // Create booking payload
       const bookingPayload = {
         city: bookingData.city,
@@ -87,12 +87,12 @@ export default function Step9Payment() {
             <p style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
               Your booking request has been received and is pending admin approval.
             </p>
-            
-            <div style={{ 
-              background: 'var(--primary-light)', 
-              border: '2px dashed var(--primary)', 
-              borderRadius: '8px', 
-              padding: '1.5rem', 
+
+            <div style={{
+              background: 'var(--primary-light)',
+              border: '2px dashed var(--primary)',
+              borderRadius: '8px',
+              padding: '1.5rem',
               margin: '2rem auto',
               maxWidth: '400px'
             }}>
@@ -107,8 +107,8 @@ export default function Step9Payment() {
               </p>
             </div>
 
-            <div style={{ 
-              background: 'rgba(102, 126, 234, 0.1)', 
+            <div style={{
+              background: 'rgba(102, 126, 234, 0.1)',
               border: '1px solid var(--primary)',
               borderRadius: '8px',
               padding: '1rem',
@@ -143,10 +143,10 @@ export default function Step9Payment() {
           Review your booking details and submit for approval
         </p>
 
-        <div style={{ 
-          background: 'var(--primary-light)', 
-          padding: '1rem', 
-          borderRadius: '8px', 
+        <div style={{
+          background: 'var(--primary-light)',
+          padding: '1rem',
+          borderRadius: '8px',
           marginBottom: '1.5rem',
           display: 'flex',
           justifyContent: 'space-between',
@@ -161,9 +161,9 @@ export default function Step9Payment() {
 
         <div style={{ marginBottom: '1.5rem' }}>
           <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.75rem' }}>Booking Summary</h3>
-          <div style={{ 
-            background: 'var(--bg-secondary)', 
-            padding: '1rem', 
+          <div style={{
+            background: 'var(--bg-secondary)',
+            padding: '1rem',
             borderRadius: '8px',
             fontSize: '0.9rem'
           }}>
@@ -192,10 +192,10 @@ export default function Step9Payment() {
           </div>
         </div>
 
-        <div style={{ 
-          marginBottom: '1.5rem', 
-          padding: '1rem', 
-          background: 'rgba(255, 193, 7, 0.1)', 
+        <div style={{
+          marginBottom: '1.5rem',
+          padding: '1rem',
+          background: 'rgba(255, 193, 7, 0.1)',
           border: '1px solid var(--warning)',
           borderRadius: '8px',
           fontSize: '0.875rem'

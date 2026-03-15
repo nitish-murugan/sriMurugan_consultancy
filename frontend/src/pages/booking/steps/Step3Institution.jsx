@@ -97,7 +97,7 @@ export default function Step3Institution() {
 
           <div className="form-row" style={{ marginTop: '1rem' }}>
             <Input
-              label="Department Name (Optional)"
+              label="Department Name (Must for Searching Company)"
               placeholder="E.g., Computer Science"
               error={errors.departmentName?.message}
               {...register('departmentName')}

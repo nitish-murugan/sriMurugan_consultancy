@@ -113,7 +113,7 @@ export const createBooking = async (req, res) => {
     try {
       const user = await User.findById(req.user._id);
       const invoiceResult = await generateInvoice(booking, user);
-      
+
       if (invoiceResult.success) {
         booking.invoicePath = invoiceResult.filePath;
         await booking.save();
@@ -197,26 +197,26 @@ export const getBookingById = async (req, res) => {
 // @access  Private (Admin)
 export const getAllBookings = async (req, res) => {
   try {
-    const { 
-      status, 
-      destination, 
-      startDate, 
-      endDate, 
-      page = 1, 
+    const {
+      status,
+      destination,
+      startDate,
+      endDate,
+      page = 1,
       limit = 10,
       sort = '-createdAt'
     } = req.query;
 
     const query = {};
-    
+
     if (status) {
       query.status = status;
     }
-    
+
     if (destination) {
       query['tripDetails.destination'] = new RegExp(destination, 'i');
     }
-    
+
     if (startDate || endDate) {
       query['tripDetails.startDate'] = {};
       if (startDate) query['tripDetails.startDate'].$gte = new Date(startDate);
@@ -253,7 +253,7 @@ export const getAllBookings = async (req, res) => {
 export const updateBookingStatus = async (req, res) => {
   try {
     const { status, driverDetails, declineReason, adminNotes } = req.body;
-    
+
     const booking = await Booking.findById(req.params.id)
       .populate('user', 'name email');
 
@@ -276,7 +276,7 @@ export const updateBookingStatus = async (req, res) => {
 
     // Update booking
     booking.status = status;
-    
+
     if (status === 'accepted') {
       if (!driverDetails || !driverDetails.name || !driverDetails.phone || !driverDetails.licenseNumber) {
         return sendError(res, 'Driver details are required when accepting a booking');
@@ -300,7 +300,7 @@ export const updateBookingStatus = async (req, res) => {
       // Release the bus
       await Bus.findByIdAndUpdate(booking.transport.bus, { status: 'available' });
     }
-    
+
     if (status === 'cancelled') {
       // Release the bus
       await Bus.findByIdAndUpdate(booking.transport.bus, { status: 'available' });
@@ -449,7 +449,7 @@ export const downloadInvoice = async (req, res) => {
       // Generate invoice if not exists
       const user = await User.findById(booking.user);
       const invoiceResult = await generateInvoice(booking, user);
-      
+
       if (invoiceResult.success) {
         booking.invoicePath = invoiceResult.filePath;
         await booking.save();
@@ -460,7 +460,7 @@ export const downloadInvoice = async (req, res) => {
 
     // Construct absolute file path
     const filePath = path.join(__dirname, '..', booking.invoicePath);
-    
+
     // Check if file exists
     if (!fs.existsSync(filePath)) {
       return sendError(res, 'Invoice file not found', 404);
