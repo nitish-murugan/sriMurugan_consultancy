@@ -18,6 +18,22 @@ const createTransporter = () => {
   const smtpPort = Number(process.env.SMTP_PORT || 587);
   const smtpUser = process.env.SMTP_USER;
   const smtpPass = process.env.SMTP_PASS;
+  const smtpSecure =
+    typeof process.env.SMTP_SECURE === 'string'
+      ? process.env.SMTP_SECURE.toLowerCase() === 'true'
+      : smtpPort === 465;
+  const smtpRequireTLS =
+    typeof process.env.SMTP_REQUIRE_TLS === 'string' &&
+    process.env.SMTP_REQUIRE_TLS.toLowerCase() === 'true';
+  const smtpRejectUnauthorized =
+    typeof process.env.SMTP_TLS_REJECT_UNAUTHORIZED === 'string'
+      ? process.env.SMTP_TLS_REJECT_UNAUTHORIZED.toLowerCase() !== 'false'
+      : true;
+
+  // Keep SMTP failures fast so API requests do not hang in production.
+  const connectionTimeout = Number(process.env.SMTP_CONNECTION_TIMEOUT || 10000);
+  const greetingTimeout = Number(process.env.SMTP_GREETING_TIMEOUT || 10000);
+  const socketTimeout = Number(process.env.SMTP_SOCKET_TIMEOUT || 15000);
 
   if (!smtpHost || !smtpUser || !smtpPass) {
     throw new Error(
@@ -28,7 +44,14 @@ const createTransporter = () => {
   return nodemailer.createTransport({
     host: smtpHost,
     port: smtpPort,
-    secure: smtpPort === 465,
+    secure: smtpSecure,
+    requireTLS: smtpRequireTLS,
+    connectionTimeout,
+    greetingTimeout,
+    socketTimeout,
+    tls: {
+      rejectUnauthorized: smtpRejectUnauthorized
+    },
     auth: {
       user: smtpUser,
       pass: smtpPass
@@ -40,9 +63,10 @@ const createTransporter = () => {
 export const sendEmail = async ({ to, subject, html, text }) => {
   try {
     const transporter = createTransporter();
+    const fromAddress = process.env.SMTP_FROM || process.env.SMTP_USER;
     
     const mailOptions = {
-      from: `"Sri Murugan Tours" <${process.env.SMTP_USER}>`,
+      from: `"Sri Murugan Tours" <${fromAddress}>`,
       to,
       subject,
       html,
@@ -53,8 +77,14 @@ export const sendEmail = async ({ to, subject, html, text }) => {
     console.log('Email sent:', info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error('Email error:', error);
-    return { success: false, error: error.message };
+    console.error('Email error:', {
+      message: error.message,
+      code: error.code,
+      command: error.command,
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT
+    });
+    return { success: false, error: error.message, code: error.code };
   }
 };
 
