@@ -29,6 +29,22 @@ connectDB();
 
 const app = express();
 
+// Render and similar platforms run behind a reverse proxy.
+// Without trust proxy, rate-limit cannot resolve the real client IP.
+if (process.env.TRUST_PROXY) {
+  const trustProxyValue = process.env.TRUST_PROXY.trim().toLowerCase();
+  if (trustProxyValue === 'true') {
+    app.set('trust proxy', true);
+  } else if (trustProxyValue === 'false') {
+    app.set('trust proxy', false);
+  } else {
+    const hops = Number(process.env.TRUST_PROXY);
+    app.set('trust proxy', Number.isNaN(hops) ? process.env.TRUST_PROXY : hops);
+  }
+} else if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

@@ -86,9 +86,88 @@ const RETRYABLE_SMTP_CODES = new Set([
   'ENOTFOUND'
 ]);
 
+const sendViaResend = async ({ to, subject, html, text }) => {
+  try {
+    if (!process.env.RESEND_API_KEY) {
+      return { success: false, error: 'RESEND_API_KEY not configured', skipped: true };
+    }
+
+    if (typeof fetch !== 'function') {
+      return { success: false, error: 'Global fetch is not available in this Node runtime' };
+    }
+
+    const fromAddress = process.env.RESEND_FROM || process.env.SMTP_FROM || process.env.SMTP_USER;
+    if (!fromAddress) {
+      return {
+        success: false,
+        error: 'Missing sender address. Set RESEND_FROM (or SMTP_FROM/SMTP_USER)'
+      };
+    }
+
+    const payload = {
+      from: `Sri Murugan Tours <${fromAddress}>`,
+      to: Array.isArray(to) ? to : [to],
+      subject,
+      html
+    };
+
+    if (text) {
+      payload.text = text;
+    }
+
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: data?.message || `Resend API error (${response.status})`,
+        status: response.status,
+        details: data
+      };
+    }
+
+    return {
+      success: true,
+      messageId: data?.id,
+      provider: 'resend'
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      code: error.code,
+      provider: 'resend'
+    };
+  }
+};
+
 // Send email helper
 export const sendEmail = async ({ to, subject, html, text }) => {
   try {
+    const providerPreference = (process.env.EMAIL_PROVIDER || 'auto').toLowerCase();
+    const canUseResend = Boolean(process.env.RESEND_API_KEY);
+    const shouldTryResendFirst =
+      providerPreference === 'resend' ||
+      (providerPreference === 'auto' && canUseResend && process.env.NODE_ENV === 'production');
+
+    if (shouldTryResendFirst) {
+      const resendResult = await sendViaResend({ to, subject, html, text });
+      if (resendResult.success) {
+        console.log('Email sent via Resend:', resendResult.messageId);
+        return resendResult;
+      }
+      console.warn('Resend send failed, falling back to SMTP:', resendResult.error);
+    }
+
     const targets = getTransportTargets();
     const fromAddress = process.env.SMTP_FROM || process.env.SMTP_USER;
     
@@ -131,6 +210,17 @@ export const sendEmail = async ({ to, subject, html, text }) => {
       command: lastError?.command,
       attemptedTargets: targets.map((target) => `${target.host}:${target.port}`).join(', ')
     });
+
+    // Optional fallback provider when SMTP is unreachable on hosting platform.
+    if (canUseResend && !shouldTryResendFirst) {
+      const resendResult = await sendViaResend({ to, subject, html, text });
+      if (resendResult.success) {
+        console.log('Email sent via Resend fallback:', resendResult.messageId);
+        return resendResult;
+      }
+      console.error('Resend fallback failed:', resendResult.error);
+    }
+
     return { success: false, error: lastError?.message || 'SMTP send failed', code: lastError?.code };
   } catch (error) {
     console.error('Email error:', {
