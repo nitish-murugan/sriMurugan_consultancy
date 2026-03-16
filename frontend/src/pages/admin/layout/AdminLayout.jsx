@@ -12,6 +12,7 @@ import {
   LogOut,
   ChevronLeft,
   Users,
+  Lightbulb,
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import './AdminLayout.css';
@@ -21,6 +22,7 @@ const navItems = [
   { to: '/admin/bookings', icon: <Calendar size={20} />, label: 'Bookings' },
   { to: '/admin/buses', icon: <Bus size={20} />, label: 'Buses' },
   { to: '/admin/companies', icon: <Building2 size={20} />, label: 'Companies' },
+  { to: '/admin/company-suggestions', icon: <Lightbulb size={20} />, label: 'Company Suggestions' },
   { to: '/admin/spots', icon: <MapPin size={20} />, label: 'Visiting Spots' },
   { to: '/admin/cities', icon: <Map size={20} />, label: 'Cities' },
   { to: '/admin/drivers', icon: <Users size={20} />, label: 'Drivers' },

@@ -1,4 +1,5 @@
 import Company from '../models/Company.js';
+import CompanySuggestion from '../models/CompanySuggestion.js';
 import { sendSuccess, sendError, sendCreated, sendNotFound } from '../utils/responseHelper.js';
 import { searchCompaniesWithAI, getCompanyVisitSuggestions } from '../utils/geminiHelper.js';
 
@@ -80,6 +81,7 @@ export const searchCompanies = async (req, res) => {
         address: c.address,
         description: c.description,
         domain: c.domain,
+        website: c.website || '',
         source: 'database'
       })),
       ...aiCompanies
@@ -225,6 +227,129 @@ export const getAISuggestions = async (req, res) => {
     sendSuccess(res, 'AI suggestions generated', { suggestion: result.suggestion });
   } catch (error) {
     console.error('AI suggestions error:', error.message, error.stack);
+    sendError(res, error.message, 500);
+  }
+};
+
+// @desc    Submit company suggestion
+// @route   POST /api/companies/suggest
+// @access  Public
+export const suggestCompany = async (req, res) => {
+  try {
+    const { name, website, description, city, domain, contactEmail, contactPhone } = req.body;
+
+    if (!name || !city || !domain) {
+      return sendError(res, 'Company name, city, and domain are required', 400);
+    }
+
+    const suggestion = await CompanySuggestion.create({
+      name: name.trim(),
+      website: website?.trim() || '',
+      description: description?.trim() || '',
+      city: city.trim(),
+      domain: domain.trim().toLowerCase(),
+      contactEmail: contactEmail?.trim().toLowerCase() || '',
+      contactPhone: contactPhone?.trim() || '',
+      suggestedBy: req.user?._id || null
+    });
+
+    sendCreated(res, 'Company suggestion submitted successfully! Admin will review it.', {
+      id: suggestion._id,
+      status: suggestion.status
+    });
+  } catch (error) {
+    console.error('Company suggestion error:', error);
+    sendError(res, error.message, 500);
+  }
+};
+
+// @desc    Get company suggestions (Admin)
+// @route   GET /api/companies/suggestions
+// @access  Private (Admin)
+export const getCompanySuggestions = async (req, res) => {
+  try {
+    const { status } = req.query;
+    const query = {};
+
+    if (status) {
+      query.status = status;
+    }
+
+    const suggestions = await CompanySuggestion.find(query)
+      .sort({ createdAt: -1 })
+      .populate('suggestedBy', 'name email');
+
+    sendSuccess(res, 'Company suggestions fetched', suggestions);
+  } catch (error) {
+    console.error('Get suggestions error:', error);
+    sendError(res, error.message, 500);
+  }
+};
+
+// @desc    Approve company suggestion (Admin)
+// @route   POST /api/companies/suggestions/:id/approve
+// @access  Private (Admin)
+export const approveSuggestion = async (req, res) => {
+  try {
+    const suggestion = await CompanySuggestion.findById(req.params.id);
+
+    if (!suggestion) {
+      return sendNotFound(res, 'Suggestion not found');
+    }
+
+    if (suggestion.status !== 'pending') {
+      return sendError(res, 'Only pending suggestions can be approved', 400);
+    }
+
+    // Create company from suggestion
+    const company = await Company.create({
+      name: suggestion.name,
+      domain: suggestion.domain,
+      city: suggestion.city,
+      description: suggestion.description,
+      website: suggestion.website,
+      contactEmail: suggestion.contactEmail,
+      contactPhone: suggestion.contactPhone,
+      source: 'suggestion'
+    });
+
+    // Update suggestion status
+    suggestion.status = 'approved';
+    await suggestion.save();
+
+    sendSuccess(res, 'Suggestion approved and company added!', {
+      suggestion: suggestion,
+      company: company
+    });
+  } catch (error) {
+    console.error('Approve suggestion error:', error);
+    sendError(res, error.message, 500);
+  }
+};
+
+// @desc    Reject company suggestion (Admin)
+// @route   POST /api/companies/suggestions/:id/reject
+// @access  Private (Admin)
+export const rejectSuggestion = async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const suggestion = await CompanySuggestion.findById(req.params.id);
+
+    if (!suggestion) {
+      return sendNotFound(res, 'Suggestion not found');
+    }
+
+    if (suggestion.status !== 'pending') {
+      return sendError(res, 'Only pending suggestions can be rejected', 400);
+    }
+
+    suggestion.status = 'rejected';
+    suggestion.rejectionReason = reason || 'No reason provided';
+    await suggestion.save();
+
+    sendSuccess(res, 'Suggestion rejected', suggestion);
+  } catch (error) {
+    console.error('Reject suggestion error:', error);
     sendError(res, error.message, 500);
   }
 };

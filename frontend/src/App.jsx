@@ -16,6 +16,7 @@ import {
   AdminBookings,
   AdminBuses,
   AdminCompanies,
+  AdminCompanySuggestions,
   AdminSpots,
   AdminCities,
   AdminDrivers,
@@ -89,6 +90,7 @@ function App() {
               <Route path="bookings" element={<AdminBookings />} />
               <Route path="buses" element={<AdminBuses />} />
               <Route path="companies" element={<AdminCompanies />} />
+              <Route path="company-suggestions" element={<AdminCompanySuggestions />} />
               <Route path="spots" element={<AdminSpots />} />
               <Route path="cities" element={<AdminCities />} />
               <Route path="drivers" element={<AdminDrivers />} />

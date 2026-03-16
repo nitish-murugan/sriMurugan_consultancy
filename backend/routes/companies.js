@@ -7,7 +7,11 @@ import {
   updateCompany,
   deleteCompany,
   getDomains,
-  getAISuggestions
+  getAISuggestions,
+  suggestCompany,
+  getCompanySuggestions,
+  approveSuggestion,
+  rejectSuggestion
 } from '../controllers/companyController.js';
 import { protect, adminOnly } from '../middleware/authMiddleware.js';
 
@@ -17,12 +21,20 @@ const router = express.Router();
 router.get('/domains', getDomains);
 router.get('/', getCompanies);
 router.post('/search', searchCompanies);
+router.post('/suggest', suggestCompany);
+
+// Admin routes (must come before /:id to avoid route conflicts)
+router.get('/suggestions', protect, adminOnly, getCompanySuggestions);
+router.post('/suggestions/:id/approve', protect, adminOnly, approveSuggestion);
+router.post('/suggestions/:id/reject', protect, adminOnly, rejectSuggestion);
+
+// Generic routes
 router.get('/:id', getCompanyById);
 
 // Protected routes
 router.post('/ai-suggest', protect, getAISuggestions);
 
-// Admin routes
+// Admin company management routes
 router.use(protect, adminOnly);
 router.post('/', createCompany);
 router.put('/:id', updateCompany);

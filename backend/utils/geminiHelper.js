@@ -15,8 +15,14 @@ export const searchCompaniesWithAI = async (domain, city) => {
   try {
     const model = getGeminiModel();
     
-    const prompt = `List 5-8 real companies in ${city}, India that are related to the "${domain}" industry/domain. 
-    These companies should be suitable for industrial visits by college students.
+    const prompt = `List 8-12 companies in ${city}, India that are related to the "${domain}" industry/domain. 
+    IMPORTANT: Include a mix of company sizes and types:
+    - Small startups and new ventures in this domain
+    - Small IT/training centers or educational institutes
+    - Small domain-related business offices
+    - Medium-sized established companies
+    
+    These companies should be suitable for industrial visits and learning by college students.
     
     Return the response as a JSON array with the following structure:
     [
@@ -24,7 +30,8 @@ export const searchCompaniesWithAI = async (domain, city) => {
         "name": "Company Name",
         "address": "Full address in ${city}",
         "description": "Brief description of what the company does (1-2 sentences)",
-        "type": "Type of company (e.g., Manufacturing, IT Services, Research, etc.)"
+        "type": "Type of company (e.g., Startup, IT Services, Training Center, Small Office, Manufacturing, etc.)",
+        "website": "company website URL if known, otherwise empty string"
       }
     ]
     
@@ -49,6 +56,7 @@ export const searchCompaniesWithAI = async (domain, city) => {
           address: company.address,
           description: company.description,
           type: company.type,
+          website: company.website || '',
           source: 'ai'
         }))
       };
